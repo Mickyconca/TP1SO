@@ -24,6 +24,19 @@ int main(int argc, char const *argv[])
         // printf("Argv %d: %s.\n", i, argv[i]);
         runTask((char *)argv[i]);
     }
+    char tasks[MAX + 1] = {0};
+    int dimRead;
+
+    while ((dimRead = read(STDIN_FILENO, tasks, MAX)) != 0)
+    {
+        if (dimRead == -1)
+        {
+            perror("Erorr in read");
+            exit(EXIT_FAILURE);
+        }
+        tasks[dimRead] = 0;
+        runTask(tasks);
+    }
     return 0;
 }
 

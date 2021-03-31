@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -33,7 +34,7 @@ typedef struct
     int ntasks;        // Tareas siendo ejecutadas por el esclavo.
     int flagEOF;
 } t_slave;
-int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char const *files[], int *k);
+int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[], int *taskIndex);
 int checkFiles(int dim, char const *files[]);
 
 int main(int argc, char const *argv[])
@@ -51,14 +52,14 @@ int main(int argc, char const *argv[])
     checkFiles(argc - 1, argv + 1);
     int totalTasks = argc - 1;
 
-    printf("total tasks: %i", totalTasks);
-
+    printf("Total tasks: %i\n", totalTasks);
+    char **tasks = (char **)argv + 1;
+    int taskIndex = 0;
     int nSlaves = (totalTasks <= NSLAVES) ? totalTasks : NSLAVES;
     int initialTasks = (totalTasks >= nSlaves * MIN_TASKS) ? MIN_TASKS : MIN_TASKS - 1;
     t_slave slaves[nSlaves];
     int taskPerSlave = initialTasks * MIN_TASKS + 1;
-    int k = 0;
-    createSlaves(nSlaves, slaves, initialTasks, argv + 1, &k);
+    createSlaves(nSlaves, slaves, initialTasks, tasks, &taskIndex);
     int tasksDone = 0;
     int pendingTasks = totalTasks - tasksDone;
     int nfds = -1;
@@ -69,7 +70,7 @@ int main(int argc, char const *argv[])
     int fdResults = fileno(fResults);
     sleep(2);
 
-    printf("Tareas asignadas: %i\n", k);
+    printf("Tareas asignadas: %i\n", taskIndex);
 
     char buffer[BF_SIZE + 1] = {0};
     fd_set fdSlaves;
@@ -130,19 +131,30 @@ int main(int argc, char const *argv[])
                 }
                 slaves[i].ntasks -= nTasks;
                 printf("%s", buffer);
-                buffer[0] = 0;
-                // TODO: Asignar si es necesario las tareas pendientes.
+                pendingTasks = totalTasks - tasksDone;
 
+                // TODO: Asignar si es necesario las tareas pendientes.
+                if (slaves[i].ntasks >= initialTasks && taskIndex < totalTasks)
+                {
+                    char *fileToAssign = (char *)tasks[taskIndex];
+                    int dim = strlen(fileToAssign);
+                    int ans = write(slaves[i].receiveInfoFD, fileToAssign, dim);
+                    if (ans == -1)
+                    {
+                        perror("Error in write");
+                        exit(EXIT_FAILURE);
+                    }
+                    taskIndex++;
+                }
                 // TODO: Luego escribo la respuesta para el vista y el result.txt, utilizando shareMemory
             }
         }
-        pendingTasks = totalTasks - tasksDone;
     }
     //Un finalizar para cerrar todos los pipes y esas cosas
     return 0;
 }
 
-int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char const *files[], int *k)
+int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[], int *taskIndex)
 {
     char *slaveArguments[initialTasks + 2]; // contando Nombre y NULL del final.
     slaveArguments[0] = PATH_SLAVE;
@@ -198,7 +210,7 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char const *
                 // printf("k: %d\n",i+j);
                 // slaveArguments[j] = (char *)files[i * initialTasks + j-1];
                 // printf("k: %d\n", *k);
-                slaveArguments[j] = (char *)files[(*k) + j - 1];
+                slaveArguments[j] = (char *)files[(*taskIndex) + j - 1];
                 slaves[i].ntasks++;
             }
             if (execv(slaveArguments[0], slaveArguments) < 0)
@@ -224,7 +236,7 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char const *
             exit(EXIT_FAILURE);
         }
         slaves[i].pid = pid;
-        (*k) += initialTasks;
+        (*taskIndex) += initialTasks;
     }
     return 0;
 }
