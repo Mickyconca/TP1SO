@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #define _POSIX_C_SOURCE 2
 #include <unistd.h>
 #include <errno.h>
@@ -6,16 +8,22 @@
 #include <string.h>
 
 #define SOLVER "minisat"
-#define MAX 4096
+#define MAX 4096 // PIPE_BUF
 static void runTask(char *task);
-//  | grep -o -e "Number of.*[0-9]\+" -e "CPU time.*" -e ".*SATISFIABLE"
 
 int main(int argc, char const *argv[])
 {
-    // if (argc - 1 == 1)
-    //     sleep(5);
-    for (int i = 0; i < argc; i++)
+    // setvbuf(stdout, NULL, _IONBF, 0);
+    if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+    {
+        perror("Error in Setvbuf");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 1; i < argc; i++)
+    {
+        // printf("Argv %d: %s.\n", i, argv[i]);
         runTask((char *)argv[i]);
+    }
     return 0;
 }
 
