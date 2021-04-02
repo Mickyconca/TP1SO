@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-#define BF_SIZE 4096
+#define BF_SIZE 1024
 #define HANDLE_ERROR(msg)   \
     do                      \
     {                       \

@@ -12,14 +12,15 @@ t_shm createShm(char *name, int size)
     toReturn.rIndex = 0;
     toReturn.wIndex = 0;
     toReturn.size = size;
-    strcpy(toReturn.name,name);
+    strcpy(toReturn.name, name);
 
     toReturn.fd = shm_open(name, O_CREAT | O_RDWR, 0666);
     if (toReturn.fd == -1)
     {
         HANDLE_ERROR("Error in shm_open");
     }
-    if (ftruncate(toReturn.fd, toReturn.size) == -1)
+    int truncateValue = ftruncate(toReturn.fd, toReturn.size);
+    if (truncateValue == -1)
     {
         HANDLE_ERROR("Error in ftruncate");
     }
@@ -35,13 +36,21 @@ t_shm createShm(char *name, int size)
 
 void readShm(t_shm *shareMem, char *buffer, char token)
 {
-    int *rIndex = {0};
-    *rIndex = shareMem->rIndex;
-    char *readFrom = (char *)shareMem->address + *rIndex;
-    int tokenIndex = strspn(shareMem->address + *rIndex, &token);
-    memcpy(buffer, readFrom, tokenIndex - 1);
-    *rIndex += tokenIndex;
-    buffer[*rIndex] = 0;
+    char *readFrom = (char *)shareMem->address + shareMem->rIndex;
+    char* tokenIndex = strchr(shareMem->address + shareMem->rIndex, token);
+    int flag = 0;
+    int i;
+    for( i = 0; i<shareMem->size && !flag; i ++){
+        if(readFrom[i] == token){
+            flag = 1;
+            buffer[i] = 0;
+        }else{
+            buffer[i] = readFrom[i];
+        }
+    }
+    shareMem->rIndex += i;
+    printf("se encontro el token en %i", shareMem->rIndex);
+    printf("%s", buffer);
 }
 
 void writeShm(t_shm *shareMem, char *fromWrite, int size)
