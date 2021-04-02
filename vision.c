@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <fcntl.h>
+#include "shm_lib.h"
 
 #define MAX 4096 // PIPE_BUF
 

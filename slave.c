@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define HANDLE_ERROR(msg)   \
+    do                      \
+    {                       \
+        perror(msg);        \
+        exit(EXIT_FAILURE); \
+    } while (0)
 
 #define SOLVER "minisat"
 #define MAX 4096 // PIPE_BUF
@@ -16,8 +22,7 @@ int main(int argc, char const *argv[])
     // setvbuf(stdout, NULL, _IONBF, 0);
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
     {
-        perror("Error in Setvbuf");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Error in Setvbuf");
     }
     for (int i = 1; i < argc; i++)
     {
@@ -31,8 +36,7 @@ int main(int argc, char const *argv[])
     {
         if (dimRead == -1)
         {
-            perror("Erorr in read");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Erorr in read");
         }
         tasks[dimRead] = 0;
         runTask(tasks);
@@ -48,16 +52,14 @@ static void runTask(char *task)
     FILE *outputStream;
     if ((outputStream = popen(command, "r")) == NULL)
     {
-        perror("Erorr in popen");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Erorr in popen");
     }
 
     int count = fread(output, sizeof(char), MAX, outputStream);
 
     if (ferror(outputStream))
     {
-        perror("Error in fread");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Error in fread");
     }
 
     output[count] = 0;
@@ -66,7 +68,6 @@ static void runTask(char *task)
 
     if (pclose(outputStream) == -1)
     {
-        perror("Error in pclose");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Error in pclose");
     }
 }

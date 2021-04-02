@@ -9,14 +9,28 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
+
+#define BF_SIZE 4096
+#define HANDLE_ERROR(msg)   \
+    do                      \
+    {                       \
+        perror(msg);        \
+        exit(EXIT_FAILURE); \
+    } while (0)
 #endif
+
 typedef struct
 {
-    int fd;        // use to read and write from the memory
-    int rIndex;    // where should I read next
-    int wIndex;    // where should I write
-    int size;      // the size of the memory assigned
-    char const *address; // use to map from a new process
+    char name[BF_SIZE];
+    int fd;              // used to read and write from the memory
+    int rIndex;          // where should I read next
+    int wIndex;          // where should I write
+    int size;            // the size of the memory assigned
+    char *address; // use to map from a new process
 } t_shm;
 
 t_shm createShm(char *name, int size); // shm_open -> ftruncate -> mmap
+void readShm(t_shm *shareMem, char *buffer, char token);
+void writeShm(t_shm *shareMem, char *fromWrite, int size);
+void finalizeShm(t_shm *shareMem);
+void readShm(t_shm *shareMem, char *buffer, char token);

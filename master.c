@@ -33,7 +33,6 @@
         perror(msg);        \
         exit(EXIT_FAILURE); \
     } while (0)
-
 #undef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
@@ -52,13 +51,11 @@ int main(int argc, char const *argv[])
 {
     if (argc <= 1)
     {
-        printf("Please select files.\n");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Please select files.\n");
     }
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
     {
-        perror("Error in Setvbuf");
-        exit(EXIT_FAILURE);
+        HANDLE_ERROR("Error in Setvbuf");
     }
     checkFiles(argc - 1, argv + 1);
     int totalTasks = argc - 1;
@@ -101,8 +98,7 @@ int main(int argc, char const *argv[])
         int res;
         if ((res = select(nfds + 1, &fdSlaves, NULL, NULL, NULL)) == -1)
         {
-            perror("Error in Select");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Error in Select");
         }
 
         for (int i = 0; res > 0 && i < nSlaves; i++)
@@ -116,8 +112,7 @@ int main(int argc, char const *argv[])
 
                 if (dimRead == -1)
                 {
-                    perror("Error in Read");
-                    exit(EXIT_FAILURE);
+                    HANDLE_ERROR("Error in Read");
                 }
                 if (dimRead == 0)
                 {
@@ -150,8 +145,7 @@ int main(int argc, char const *argv[])
                     int ans = write(slaves[i].receiveInfoFD, fileToAssign, dim);
                     if (ans == -1)
                     {
-                        perror("Error in write");
-                        exit(EXIT_FAILURE);
+                        HANDLE_ERROR("Error in write");
                     }
                     taskIndex++;
                 }
@@ -174,8 +168,7 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[
         pipe(masterToSlave);
         if (pipe(masterToSlave) < 0)
         {
-            perror("Pipe Error Master");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Pipe Error Master");
         }
         slaves[i].receiveInfoFD = masterToSlave[WRITE];
 
@@ -183,8 +176,7 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[
         pipe(slaveToMaster);
         if (pipe(slaveToMaster) < 0)
         {
-            perror("Pipe Error Slave ");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Pipe Error Slave ");
         }
         slaves[i].sendInfoFD = slaveToMaster[READ];
         slaves[i].flagEOF = 0;
@@ -193,25 +185,21 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[
         {
             if (close(masterToSlave[WRITE]) < 0)
             {
-                perror("Error closing slave WRITE to master");
-                exit(EXIT_FAILURE);
+                HANDLE_ERROR("Error closing slave WRITE to master");
             }
             if (dup2(masterToSlave[READ], READ) < 0)
             {
-                perror("Error dupping pipe");
-                exit(EXIT_FAILURE);
+                HANDLE_ERROR("Error dupping pipe");
             }
             // close(masterToSlave[READ]);
 
             if (close(slaveToMaster[READ]) < 0)
             {
-                perror("Error closing slave WRITE to master");
-                exit(EXIT_FAILURE);
+                HANDLE_ERROR("Error closing slave WRITE to master");
             }
             if (dup2(slaveToMaster[WRITE], WRITE) < 0)
             {
-                perror("Error dupping");
-                exit(EXIT_FAILURE);
+                HANDLE_ERROR("Error dupping");
             }
 
             for (int j = 1; j < initialTasks + 1; j++)
@@ -221,25 +209,21 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[
             }
             if (execv(slaveArguments[0], slaveArguments) < 0)
             {
-                perror("Execv Error");
-                exit(EXIT_FAILURE);
+                HANDLE_ERROR("Execv Error");
             }
         }
         else if (pid < 0)
         {
-            perror("Fork Error");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Fork Error");
         }
         // Cierro el pipe de READ de masterToSlave
         if (close(masterToSlave[READ]) < 0)
         {
-            perror("Error closing master READ to slave");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Error closing master READ to slave");
         }
         if (close(slaveToMaster[WRITE]) < 0)
         {
-            perror("Error closing slave WRITE to master");
-            exit(EXIT_FAILURE);
+            HANDLE_ERROR("Error closing slave WRITE to master");
         }
         slaves[i].pid = pid;
         (*taskIndex) += initialTasks;
@@ -255,8 +239,7 @@ int checkFiles(int dim, char const *files[])
         fptr = fopen(files[i], "r");
         if (fptr == NULL)
         {
-            perror("Please check the selected files");
-            exit(-1);
+            HANDLE_ERROR("Please check the selected files");
         }
         //fclose(fptr);
     }
