@@ -10,6 +10,9 @@
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <fcntl.h>
+
+#include "sem_lib.h"
+#include "shm_lib.h"
 // ​./solve files/* | ./vista
 
 //fd[0] read
@@ -19,9 +22,17 @@
 
 #define PATH_SLAVE "./slave"
 #define PATH_RESULTS "./results.txt"
+#define SHM_NAME "/shm"
+#define SEM_NAME "/sem"
 #define NSLAVES 5
 #define MIN_TASKS 2
 #define BF_SIZE 4096
+#define HANDLE_ERROR(msg)   \
+    do                      \
+    {                       \
+        perror(msg);        \
+        exit(EXIT_FAILURE); \
+    } while (0)
 
 #undef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -58,7 +69,6 @@ int main(int argc, char const *argv[])
     int nSlaves = (totalTasks <= NSLAVES) ? totalTasks : NSLAVES;
     int initialTasks = (totalTasks >= nSlaves * MIN_TASKS) ? MIN_TASKS : MIN_TASKS - 1;
     t_slave slaves[nSlaves];
-    int taskPerSlave = initialTasks * MIN_TASKS + 1;
     createSlaves(nSlaves, slaves, initialTasks, tasks, &taskIndex);
     int tasksDone = 0;
     int pendingTasks = totalTasks - tasksDone;
@@ -67,7 +77,6 @@ int main(int argc, char const *argv[])
     // Al tener la sharememory conviene guardar todo ahi y al final de
     // todo imprimirlo en el archivo. Para testear escribimos todo el tiempo.
     FILE *fResults = fopen(PATH_RESULTS, "w");
-    int fdResults = fileno(fResults);
     sleep(2);
 
     printf("Tareas asignadas: %i\n", taskIndex);
@@ -112,13 +121,9 @@ int main(int argc, char const *argv[])
                 }
                 if (dimRead == 0)
                 {
-                    //FD_CLR(fdCurrent, &fdSlaves);
                     slaves[i].flagEOF = 1;
                 }
                 buffer[dimRead] = '\0';
-                printf("Hola, soy el esclavo %i\n", slaves[i].pid);
-                printf("La dimension del read: %i\n", dimRead);
-                printf("TasksDone: %i\n", tasksDone);
                 int nTasks = 0;
                 for (int j = 0; j < dimRead; j++)
                 {
@@ -127,6 +132,10 @@ int main(int argc, char const *argv[])
                         nTasks++;
                         tasksDone++;
                         printf("Tasks Done: %i\n", tasksDone);
+                        buffer[j] = '\n'; // removemos \t
+                        // Escribo en el archivo.
+                        if (fwrite(buffer, sizeof(char), j, fResults) == 0)
+                            HANDLE_ERROR("Error in file write");
                     }
                 }
                 slaves[i].ntasks -= nTasks;
@@ -146,11 +155,11 @@ int main(int argc, char const *argv[])
                     }
                     taskIndex++;
                 }
-                // TODO: Luego escribo la respuesta para el vista y el result.txt, utilizando shareMemory
+                // TODO: Luego escribo la respuesta para el vista, utilizando shareMemory.
             }
         }
     }
-    //Un finalizar para cerrar todos los pipes y esas cosas
+    // TODO: Un finalizar para cerrar todos los pipes y esas cosas.
     return 0;
 }
 
@@ -207,9 +216,6 @@ int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[
 
             for (int j = 1; j < initialTasks + 1; j++)
             {
-                // printf("k: %d\n",i+j);
-                // slaveArguments[j] = (char *)files[i * initialTasks + j-1];
-                // printf("k: %d\n", *k);
                 slaveArguments[j] = (char *)files[(*taskIndex) + j - 1];
                 slaves[i].ntasks++;
             }
