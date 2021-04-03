@@ -47,9 +47,9 @@ typedef struct
 static int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[], int *taskIndex);
 static void endSlavery(t_slave slaves[], int dimSlaves);
 static int checkFiles(int dim, char const *files[]);
-static void writeResults(t_shm shareMem, char * buffer, int size, FILE * fResults);
-static void initialize(int argc, char const *argv[], t_shm * shareMem, t_sem * sem);
-static void finalize(t_slave slaves[], int dimSlaves, t_sem * sem, t_shm * shareMem);
+static void writeResults(t_shm shareMem, char *buffer, int size, FILE *fResults);
+static void initialize(int argc, char const *argv[], t_shm *shareMem, t_sem *sem);
+static void finalize(t_slave slaves[], int dimSlaves, t_sem *sem, t_shm *shareMem);
 
 int main(int argc, char const *argv[])
 {
@@ -57,14 +57,14 @@ int main(int argc, char const *argv[])
     t_shm shareMem;
     t_sem sem;
     initialize(argc, argv, &shareMem, &sem);
-    
-    int taskIndex = 0; 
+
+    int taskIndex = 0;
     int nSlaves = (totalTasks <= NSLAVES) ? totalTasks : NSLAVES;
     t_slave slaves[nSlaves];
     char **tasks = (char **)argv + 1;
     int initialTasks = (totalTasks >= nSlaves * MIN_TASKS) ? MIN_TASKS : MIN_TASKS - 1;
     createSlaves(nSlaves, slaves, initialTasks, tasks, &taskIndex);
-    
+
     int tasksDone = 0;
     int pendingTasks = totalTasks - tasksDone;
     int nfds = -1;
@@ -76,7 +76,7 @@ int main(int argc, char const *argv[])
     sleep(2);
 
     printf("Tareas asignadas: %i\n", taskIndex);
-    
+
     char buffer[BF_SIZE + 1] = {0};
     fd_set fdSlaves;
     while (pendingTasks > 0)
@@ -127,8 +127,9 @@ int main(int argc, char const *argv[])
                         tasksDone++;
                         printf("Tasks Done: %i\n", tasksDone);
                         sem_wait(sem.access);
-                        writeResults(shareMem,buffer,dimRead,fResults);
-                        sem_post(sem.access);
+                        writeResults(shareMem, buffer, dimRead, fResults);
+                        if (sem_post(sem.access) == -1)
+                            HANDLE_ERROR("Error in sem_post");
                     }
                 }
                 slaves[i].ntasks -= nTasks;
@@ -150,12 +151,12 @@ int main(int argc, char const *argv[])
             }
         }
     }
-    // TODO: Un finalizar para cerrar todos los pipes y esas cosas.
     finalize(slaves, nSlaves, &sem, &shareMem);
     return 0;
 }
 
-void initialize(int argc, char const *argv[], t_shm * shareMem, t_sem * sem){
+void initialize(int argc, char const *argv[], t_shm *shareMem, t_sem *sem)
+{
     if (argc <= 1)
     {
         HANDLE_ERROR("Please select files.\n");
@@ -165,10 +166,9 @@ void initialize(int argc, char const *argv[], t_shm * shareMem, t_sem * sem){
         HANDLE_ERROR("Error in Setvbuf");
     }
     checkFiles(argc - 1, argv + 1);
-    
-    int totalTasks = argc-1;
-    printf("Total tasks: %i\n", argc-1); 
-    
+
+    printf("Total tasks: %i\n", argc - 1);
+
     *shareMem = createShm(SHM_NAME, BF_SIZE);
     *sem = createSem(SEM_NAME);
 }
@@ -262,36 +262,44 @@ static int checkFiles(int dim, char const *files[])
     return 1;
 }
 
-static void writeResults(t_shm shareMem, char * buffer, int size, FILE * fResults){
-    //Funcion writeResult
-                        //Escribo en la shareMemory
-                        
-                        writeShm(&shareMem, buffer, size);
-                        buffer[size] = '\n'; // removemos \t
-                        // Escribo en el archivo.
-                        if (fwrite(buffer, sizeof(char), size, fResults) == 0)
-                            HANDLE_ERROR("Error in file write");
-                        
+static void writeResults(t_shm shareMem, char *buffer, int size, FILE *fResults)
+{
+    // Funcion writeResult
+    // Escribo en la shareMemory
+    // printf("Llegue al write\n");
+    writeShm(&shareMem, buffer, size);
+    buffer[size] = '\n'; // removemos \t
+    // Escribo en el archivo.
+    if (fwrite(buffer, sizeof(char), size, fResults) == 0)
+        HANDLE_ERROR("Error in file write");
+ 
 }
-static void endSlavery(t_slave slaves[], int dimSlaves){
-    for(int i =0; i<dimSlaves; i++){
+static void endSlavery(t_slave slaves[], int dimSlaves)
+{
+    for (int i = 0; i < dimSlaves; i++)
+    {
         //Cierro los dos pipes del esclavo
-        if(close(slaves[i].receiveInfoFD) == -1){
+        if (close(slaves[i].receiveInfoFD) == -1)
+        {
             HANDLE_ERROR("Error closing slave pipes");
         }
-        if(close(slaves[i].sendInfoFD) == -1){
+        if (close(slaves[i].sendInfoFD) == -1)
+        {
             HANDLE_ERROR("Error closing slave pipes");
         }
     }
-    //Hago el wait de los esclavos para que no queden zombies
-    for(int i =0; i<dimSlaves; i++){
-        //Cierro los dos pipes del esclavo
-        if(wait(NULL) == -1){
+    // Hago el wait de los esclavos para que no queden zombies
+    for (int i = 0; i < dimSlaves; i++)
+    {
+        // Cierro los dos pipes del esclavo
+        if (wait(NULL) == -1)
+        {
             HANDLE_ERROR("Error in wait for slave");
         }
     }
 }
-static void finalize(t_slave slaves[], int dimSlaves, t_sem * sem, t_shm * shareMem){
+static void finalize(t_slave slaves[], int dimSlaves, t_sem *sem, t_shm *shareMem)
+{
     endSlavery(slaves, dimSlaves);
     closeSem(sem);
     closeShm(shareMem);

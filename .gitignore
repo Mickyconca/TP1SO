@@ -1,4 +1,5 @@
 desktop.ini
 .vscode/settings.json
+.bash_history
 producer.c
 consumer.c
