@@ -37,20 +37,21 @@ t_shm createShm(char *name, int size)
 void readShm(t_shm *shareMem, char *buffer, char token)
 {
     char *readFrom = (char *)shareMem->address + shareMem->rIndex;
-    char* tokenIndex = strchr(shareMem->address + shareMem->rIndex, token);
     int flag = 0;
     int i;
-    for( i = 0; i<shareMem->size && !flag; i ++){
-        if(readFrom[i] == token){
+    for (i = 0; i < shareMem->size && !flag; i++)
+    {
+        if (readFrom[i] == token)
+        {
             flag = 1;
             buffer[i] = 0;
-        }else{
+        }
+        else
+        {
             buffer[i] = readFrom[i];
         }
     }
     shareMem->rIndex += i;
-    printf("se encontro el token en %i", shareMem->rIndex);
-    printf("%s", buffer);
 }
 
 void writeShm(t_shm *shareMem, char *fromWrite, int size)
@@ -64,7 +65,7 @@ void writeShm(t_shm *shareMem, char *fromWrite, int size)
     toWrite[writeIndex] = 0;
 }
 
-void finalizeShm(t_shm *shareMem)
+void closeShm(t_shm *shareMem)
 {
     int fd = shareMem->fd;
     int size = shareMem->size;

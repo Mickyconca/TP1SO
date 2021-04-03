@@ -1,6 +1,6 @@
 CC= gcc
 GCCFLAGS= -std=c99 -Wall -g -fsanitize=address -D_XOPEN_SOURCE=700
-GCCLIBS= -lrt
+GCCLIBS= -lrt -lpthread
 EXEC = Master Slave Vision
 
 LIB_O = shm_lib.o sem_lib.o
