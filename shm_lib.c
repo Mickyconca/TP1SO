@@ -10,12 +10,15 @@
 
 t_shm createShm(char *name, int size)
 {
+    // if (shm_unlink(name) == -1)
+    // {
+    //     HANDLE_ERROR("Error in unlink");
+    // }
     t_shm toReturn;
     toReturn.rIndex = 0;
     toReturn.wIndex = 0;
     toReturn.size = size;
     strcpy(toReturn.name, name);
-
     toReturn.fd = shm_open(name, O_CREAT | O_RDWR, 0666);
     if (toReturn.fd == -1)
     {
@@ -40,13 +43,10 @@ t_shm joinShm(char *name, int size)
 {
     t_shm toReturn;
     strcpy(toReturn.name, name);
-    if ((toReturn.fd = shm_open(SHM_NAME, O_RDONLY, 0444)) == -1)
+    if ((toReturn.fd = shm_open(name, O_RDONLY, 0)) == -1)
         HANDLE_ERROR("Error in shm_open in vision");
-    int protection = PROT_READ;
-    int visibility = MAP_SHARED;
-    if ((toReturn.address = mmap(NULL, size, protection, visibility, toReturn.fd, 0)) == MAP_FAILED)
+    if ((toReturn.address = mmap(NULL, size, PROT_READ, MAP_SHARED, toReturn.fd, 0)) == MAP_FAILED)
         HANDLE_ERROR("Error in mmap in vision");
-
     toReturn.wIndex = 0;
     toReturn.rIndex = 0;
     toReturn.size = size;
@@ -54,7 +54,7 @@ t_shm joinShm(char *name, int size)
     return toReturn;
 }
 
-void readShm(t_shm *shareMem, char *buffer, char token)
+void readShm(t_shm *shareMem, char *buffer, char token, int *qRead)
 {
     char *readFrom = (char *)shareMem->address + shareMem->rIndex;
     int flag = 0;
@@ -65,6 +65,7 @@ void readShm(t_shm *shareMem, char *buffer, char token)
         {
             flag = 1;
             buffer[i] = 0;
+            (*qRead)++;
         }
         else
         {
@@ -83,6 +84,8 @@ void writeShm(t_shm *shareMem, char *fromWrite, int size)
         toWrite[writeIndex++] = fromWrite[i];
     }
     toWrite[writeIndex] = 0;
+    shareMem->wIndex = writeIndex;
+    printf("wIndex in master: %i\n", writeIndex);
 }
 
 void closeShm(t_shm *shareMem)

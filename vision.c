@@ -12,13 +12,11 @@
 #include <fcntl.h>
 #include "shm_lib.h"
 #include "sem_lib.h"
-#define SHM_NAME "/shm"
-#define SEM_NAME "/sem"
 #define MAX 4096   // PIPE_BUF
 #define TOKEN '\t' // Token elegido para separar las tareas
 
 int main(int argc, char const *argv[])
-{
+{   
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
     {
         HANDLE_ERROR("Error in Setvbuf");
@@ -36,7 +34,7 @@ int main(int argc, char const *argv[])
             HANDLE_ERROR("Error in read from pipe in vision");
         printf("bytesRead: %d\n", bytesRead);
         tasksRead[bytesRead] = 0;
-        printf("%s.\n", tasksRead);
+        // printf("%s.\n", tasksRead);
         tasksSize = strtol(tasksRead, NULL, 10);
     }
     else if (argc - 1 == 1) // Parametro
@@ -57,15 +55,14 @@ int main(int argc, char const *argv[])
     t_sem sem = createSem(SEM_NAME);
 
     int keepReading = 0;
-    char buffer[MAX];
+    char buffer[MAX + 1];
     while (keepReading < tasksSize)
     {
         sem_wait(sem.access);
-        readShm(&shareMem, buffer, TOKEN);
-        keepReading++;
-        printf("%s\n", buffer);
+        readShm(&shareMem, buffer, TOKEN, &keepReading);
+        printf("%s\n",buffer);
     }
-    eraseShm(&shareMem);
+    closeShm(&shareMem);
     closeSem(&sem);
     return 0;
 }
