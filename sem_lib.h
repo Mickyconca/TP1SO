@@ -11,7 +11,7 @@
 #include <string.h>
 #include <fcntl.h>    /* For O_* constants */
 #include <sys/stat.h> /* For mode constants */
-
+#define SEM_NAME "/sem"
 #define NAME_MAX 255
 #define HANDLE_ERROR(msg)   \
     do                      \

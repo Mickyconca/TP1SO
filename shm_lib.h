@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
+#define SHM_NAME "/shm"
 #define HANDLE_ERROR(msg)   \
     do                      \
     {                       \
@@ -28,6 +29,7 @@ typedef struct
 } t_shm;
 
 t_shm createShm(char *name, int size); // shm_open -> ftruncate -> mmap
+t_shm joinShm(char *name, int size); 
 void readShm(t_shm *shareMem, char *buffer, char token);
 void writeShm(t_shm *shareMem, char *fromWrite, int size);
 void closeShm(t_shm *shareMem);

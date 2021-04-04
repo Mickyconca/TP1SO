@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include "shm_lib.h"
 
 // 1ero crear la memoria.
@@ -31,6 +33,24 @@ t_shm createShm(char *name, int size)
     {
         HANDLE_ERROR("Error in mmap");
     }
+    return toReturn;
+}
+
+t_shm joinShm(char *name, int size)
+{
+    t_shm toReturn;
+    strcpy(toReturn.name, name);
+    if ((toReturn.fd = shm_open(SHM_NAME, O_RDONLY, 0444)) == -1)
+        HANDLE_ERROR("Error in shm_open in vision");
+    int protection = PROT_WRITE | PROT_READ;
+    int visibility = MAP_SHARED;
+    if ((toReturn.address = mmap(NULL, size, protection, visibility, toReturn.fd, 0)) == MAP_FAILED)
+        HANDLE_ERROR("Error in mmap in vision");
+
+    toReturn.wIndex = 0;
+    toReturn.rIndex = 0;
+    toReturn.size = size;
+
     return toReturn;
 }
 

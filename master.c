@@ -22,8 +22,6 @@
 
 #define PATH_SLAVE "./slave"
 #define PATH_RESULTS "./results.txt"
-#define SHM_NAME "/shm"
-#define SEM_NAME "/sem"
 #define NSLAVES 5
 #define MIN_TASKS 2
 #define BF_SIZE 4096
@@ -126,7 +124,6 @@ int main(int argc, char const *argv[])
                         nTasks++;
                         tasksDone++;
                         printf("Tasks Done: %i\n", tasksDone);
-                        sem_wait(sem.access);
                         writeResults(shareMem, buffer, dimRead, fResults);
                         if (sem_post(sem.access) == -1)
                             HANDLE_ERROR("Error in sem_post");
@@ -257,7 +254,7 @@ static int checkFiles(int dim, char const *files[])
         {
             HANDLE_ERROR("Please check the selected files");
         }
-        //fclose(fptr);
+        fclose(fptr);
     }
     return 1;
 }

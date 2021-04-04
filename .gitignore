@@ -1,5 +1,7 @@
 desktop.ini
 .vscode/settings.json
 .bash_history
+.config
 producer.c
 consumer.c
+.lesshst
