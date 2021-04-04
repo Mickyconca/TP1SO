@@ -45,7 +45,7 @@ typedef struct
 static int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[], int *taskIndex);
 static void endSlavery(t_slave slaves[], int dimSlaves);
 static int checkFiles(int dim, char const *files[]);
-static void writeResults(t_shm shareMem, char *buffer, int size, FILE *fResults);
+static void writeResults(t_shm* shareMem, char *buffer, int size, FILE *fResults);
 static void initialize(int argc, char const *argv[], t_shm *shareMem, t_sem *sem);
 static void finalize(t_slave slaves[], int dimSlaves, t_sem *sem, t_shm *shareMem);
 
@@ -70,11 +70,9 @@ int main(int argc, char const *argv[])
     // Al tener la sharememory conviene guardar todo ahi y al final de
     // todo imprimirlo en el archivo. Para testear escribimos todo el tiempo.
     FILE *fResults = fopen(PATH_RESULTS, "w");
-
+    
     sleep(2);
-
-    printf("Tareas asignadas: %i\n", taskIndex);
-
+    // printf("%i\n", totalTasks); // le enviamos en el pipeo al view la cantidad de tareas a resolver.
     char buffer[BF_SIZE + 1] = {0};
     fd_set fdSlaves;
     while (pendingTasks > 0)
@@ -117,23 +115,24 @@ int main(int argc, char const *argv[])
                 }
                 buffer[dimRead] = '\0';
                 int nTasks = 0;
-                for (int j = 0; j < dimRead; j++)
+                for (int j = 0, k = 0; j < dimRead; j++, k++)
                 {
                     if (buffer[j] == '\t')
                     {
                         nTasks++;
                         tasksDone++;
-                        printf("Tasks Done: %i\n", tasksDone);
-                        writeResults(shareMem, buffer, dimRead, fResults);
+                        // printf("Tasks Done: %i\n", tasksDone);
                         if (sem_post(sem.access) == -1)
                             HANDLE_ERROR("Error in sem_post");
+                        writeResults(&shareMem, buffer, j+1, fResults);
+                        k = 0;   
                     }
                 }
                 slaves[i].ntasks -= nTasks;
                 printf("%s", buffer);
                 pendingTasks = totalTasks - tasksDone;
 
-                // TODO: Asignar si es necesario las tareas pendientes.
+                // Se asignan si es necesario las tareas pendientes.
                 if (slaves[i].ntasks >= initialTasks && taskIndex < totalTasks)
                 {
                     char *fileToAssign = (char *)tasks[taskIndex];
@@ -164,7 +163,7 @@ void initialize(int argc, char const *argv[], t_shm *shareMem, t_sem *sem)
     }
     checkFiles(argc - 1, argv + 1);
 
-    printf("Total tasks: %i\n", argc - 1);
+    printf("%i", argc - 1);
 
     *shareMem = createShm(SHM_NAME, BF_SIZE);
     *sem = createSem(SEM_NAME);
@@ -259,17 +258,14 @@ static int checkFiles(int dim, char const *files[])
     return 1;
 }
 
-static void writeResults(t_shm shareMem, char *buffer, int size, FILE *fResults)
+static void writeResults(t_shm* shareMem, char *buffer, int size, FILE *fResults)
 {
-    // Funcion writeResult
+    writeShm(shareMem, buffer, size);
     // Escribo en la shareMemory
-    // printf("Llegue al write\n");
-    writeShm(&shareMem, buffer, size);
-    buffer[size] = '\n'; // removemos \t
+    buffer[size-1] = '\n'; // removemos \t
     // Escribo en el archivo.
     if (fwrite(buffer, sizeof(char), size, fResults) == 0)
         HANDLE_ERROR("Error in file write");
- 
 }
 static void endSlavery(t_slave slaves[], int dimSlaves)
 {
@@ -299,5 +295,5 @@ static void finalize(t_slave slaves[], int dimSlaves, t_sem *sem, t_shm *shareMe
 {
     endSlavery(slaves, dimSlaves);
     closeSem(sem);
-    closeShm(shareMem);
+    eraseShm(shareMem);
 }

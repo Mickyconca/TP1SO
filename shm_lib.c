@@ -42,7 +42,7 @@ t_shm joinShm(char *name, int size)
     strcpy(toReturn.name, name);
     if ((toReturn.fd = shm_open(SHM_NAME, O_RDONLY, 0444)) == -1)
         HANDLE_ERROR("Error in shm_open in vision");
-    int protection = PROT_WRITE | PROT_READ;
+    int protection = PROT_READ;
     int visibility = MAP_SHARED;
     if ((toReturn.address = mmap(NULL, size, protection, visibility, toReturn.fd, 0)) == MAP_FAILED)
         HANDLE_ERROR("Error in mmap in vision");

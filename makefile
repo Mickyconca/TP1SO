@@ -32,10 +32,10 @@ Slave: $(SLAVE_O) $(LIB_O) $(LIB_H)
 
 
 Master: $(MASTER_O) $(LIB_O) $(LIB_H)
-	$(CC) $(GCCFLAGS) $(LIB_O) $(MASTER_O) -o Master $(GCCLIBS) $(LIB_H)
+	$(CC) $(GCCFLAGS) $(LIB_O) $(MASTER_O) -o Master $(GCCLIBS) $(LIB_H) 
 
 Vision: $(VISION_O) $(LIB_O) $(LIB_H)
-	$(CC) $(GCCFLAGS) $(LIB_O) $(VISION_O) -o Vision $(GCCLIBS) $(LIB_H)
+	$(CC) $(GCCFLAGS) $(LIB_O) $(VISION_O) -o Vision $(GCCLIBS) $(LIB_H) 
 
 
 $(LIB_O): $(LIB_C) $(LIB_H)

@@ -34,3 +34,4 @@ void readShm(t_shm *shareMem, char *buffer, char token);
 void writeShm(t_shm *shareMem, char *fromWrite, int size);
 void closeShm(t_shm *shareMem);
 void readShm(t_shm *shareMem, char *buffer, char token);
+void eraseShm(t_shm *shareMem);

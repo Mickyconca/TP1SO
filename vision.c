@@ -47,9 +47,9 @@ int main(int argc, char const *argv[])
     {
         HANDLE_ERROR("Error, wrong parameters in vision");
     }
+    printf("TasksSize: %d\n", tasksSize);
     if (tasksSize == 0)
     {
-        printf("TasksSize: %d\n", tasksSize);
         HANDLE_ERROR("Error, no tasks found to be processed");
     }
 
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
         keepReading++;
         printf("%s\n", buffer);
     }
-    closeShm(&shareMem);
+    eraseShm(&shareMem);
     closeSem(&sem);
     return 0;
 }
