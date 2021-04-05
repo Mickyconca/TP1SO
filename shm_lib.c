@@ -54,25 +54,49 @@ t_shm joinShm(char *name, int size)
     return toReturn;
 }
 
-void readShm(t_shm *shareMem, char *buffer, char token, int *qRead)
+// void readShm(t_shm *shareMem, char *buffer, char token)
+// {
+//     // printf("%s\n", shareMem->address + shareMem->rIndex);
+//     //     shareMem->rIndex += size;
+
+//     char *nextTask;
+//     if ((nextTask = strchr(shareMem->address + shareMem->rIndex, token)) == NULL)
+//     {
+//         HANDLE_ERROR("Error in readshm in vision");
+//     }
+//     strcpy(nextTask, "\n");
+//     strcpy(buffer, shareMem->address + shareMem->rIndex);
+//     shareMem->rIndex += (nextTask - shareMem->address);
+
+//     // char *readFrom = (char *)shareMem->address + shareMem->rIndex;
+//     // int flag = 0;
+//     // int i;
+//     // for (i = 0; i < shareMem->size && !flag; i++)
+//     // {
+//     //     if (readFrom[i] == token)
+//     //     {
+//     //         flag = 1;
+//     //         buffer[i] = 0;
+//     //     }
+//     //     else
+//     //     {
+//     //         buffer[i] = readFrom[i];
+//     //     }
+//     // }
+//     // shareMem->rIndex += i;
+// }
+char *readShm(t_shm *shareMem)
 {
-    char *readFrom = (char *)shareMem->address + shareMem->rIndex;
-    int flag = 0;
-    int i;
-    for (i = 0; i < shareMem->size && !flag; i++)
-    {
-        if (readFrom[i] == token)
-        {
-            flag = 1;
-            buffer[i] = 0;
-            (*qRead)++;
-        }
-        else
-        {
-            buffer[i] = readFrom[i];
-        }
-    }
-    shareMem->rIndex += i;
+    char *toReturn = shareMem->address + shareMem->rIndex;
+    // char *nextTask;
+    // if ((nextTask = strchr(shareMem->address + shareMem->rIndex, 0)) == NULL)
+    // {
+    //     HANDLE_ERROR("Error in readshm in vision");
+    // }
+    int size = strlen(toReturn);
+    //shareMem->rIndex += (nextTask + 1 - shareMem->address);
+    shareMem->rIndex += (size + 1);
+    return toReturn;
 }
 
 void writeShm(t_shm *shareMem, char *fromWrite, int size)
@@ -85,7 +109,6 @@ void writeShm(t_shm *shareMem, char *fromWrite, int size)
     }
     toWrite[writeIndex] = 0;
     shareMem->wIndex = writeIndex;
-    printf("wIndex in master: %i\n", writeIndex);
 }
 
 void closeShm(t_shm *shareMem)

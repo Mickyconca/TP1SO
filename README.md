@@ -52,24 +52,22 @@ Para ejecutar **Vision** hay dos formas:
 ```bash
 # Terminal 1:
 ./Master
-23
+3
 ```
 
 ```bash
 # Terminal 2:
- ./Vision 23
+ ./Vision 3
 ```
 
 3. Correr **Master** en *background* y **Vision** en *foreground* pasando el valor de retorno de Master.
 
 ```bash
-./solve files/*& # background
-./vista 23       # foreground
+./Master files/*& # background
+./Vision 3       # foreground
 ```
 
 Al finalizar la ejecución de **Master** se creará un archivo llamado **results.txt**, con la resolución de los **SAT** y por *standard output* será mostrado gracias a **Vision**.
-
-Si desea remover los archivos generados, ejecute `make clean` en el mismo directorio donde fue realizada la compilación.
 
 ## Testeo
 
@@ -81,8 +79,8 @@ Para el testeo con tanto **PVS-Studio**, **Cppcheck** como **Valgrind** se debe 
 
 Los resultados se encontrarán de la siguiente manera:
 
- * **PVS-Studio:** *report.tasks*
- * **Valgrind:** *vision.valgrind*, *master.valgrind*
- * **Cppcheck:** *cppoutput.txt*
+ * **PVS-Studio:** report.tasks
+ * **Valgrind:** vision.valgrind, master.valgrind
+ * **Cppcheck:** cppoutput.txt
 
 Para remover los mismos, correr el comando `make cleanTest` en el mismo directorio donde fue realizada la compilación.

@@ -16,7 +16,7 @@
 #define TOKEN '\t' // Token elegido para separar las tareas
 
 int main(int argc, char const *argv[])
-{   
+{
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
     {
         HANDLE_ERROR("Error in Setvbuf");
@@ -55,12 +55,24 @@ int main(int argc, char const *argv[])
     t_sem sem = createSem(SEM_NAME);
 
     int keepReading = 0;
-    char buffer[MAX + 1];
+    // char buffer[MAX + 1];
+    char *toRead;
     while (keepReading < tasksSize)
     {
         sem_wait(sem.access);
-        readShm(&shareMem, buffer, TOKEN, &keepReading);
-        printf("%s\n",buffer);
+        // toRead = shareMem.address + shareMem.rIndex;
+        // int size = strlen(toRead);
+        // printf("%s", toRead);
+        // shareMem.rIndex += size;
+        // if(*toRead == 0)
+        //     keepReading=tasksSize;
+        int oldIndex = shareMem.rIndex;
+        toRead = readShm(&shareMem);
+        // readShm(&shareMem, buffer, TOKEN);
+        if (oldIndex < shareMem.rIndex)
+            keepReading++;
+        printf("%i\n", keepReading);
+        printf("%s", toRead);
     }
     closeShm(&shareMem);
     closeSem(&sem);

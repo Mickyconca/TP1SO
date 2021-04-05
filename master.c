@@ -118,17 +118,14 @@ int main(int argc, char const *argv[])
                 {
                     if (buffer[j] == '\t')
                     {
+                        if (sem_post(sem.access) == -1)
+                            HANDLE_ERROR("Error in sem_post");
                         nTasks++;
                         tasksDone++;
                         // printf("Tasks Done: %i\n", tasksDone);
-                        writeResults(&shareMem, buffer, j+1, fResults);
+                        writeResults(&shareMem, buffer, j + 1, fResults);
                         k = 0;
                     }
-                }
-                for (int i = 0; i < nTasks; i++)
-                {
-                    if (sem_post(sem.access) == -1)
-                        HANDLE_ERROR("Error in sem_post");
                 }
                 slaves[i].ntasks -= nTasks;
                 // printf("%s\n", buffer);
@@ -159,16 +156,17 @@ void initialize(int argc, char const *argv[], t_shm *shareMem, t_sem *sem)
     {
         HANDLE_ERROR("Please select files.\n");
     }
+
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
     {
         HANDLE_ERROR("Error in Setvbuf");
     }
-    checkFiles(argc - 1, argv + 1);
 
-    printf("%i", argc - 1);
+    checkFiles(argc - 1, argv + 1);
 
     *shareMem = createShm(SHM_NAME, BF_SIZE);
     *sem = createSem(SEM_NAME);
+    printf("%i", argc - 1);
 }
 
 static int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char *files[], int *taskIndex)
@@ -213,7 +211,7 @@ static int createSlaves(int dimSlaves, t_slave slaves[], int initialTasks, char 
             }
             if (dup2(slaveToMaster[WRITE], WRITE) < 0)
             {
-                HANDLE_ERROR("Error dupping");
+                HANDLE_ERROR("Error dupping pipe");
             }
 
             for (int j = 1; j < initialTasks + 1; j++)
@@ -262,17 +260,18 @@ static int checkFiles(int dim, char const *files[])
 
 static void writeResults(t_shm *shareMem, char *buffer, int size, FILE *fResults)
 {
-    printf("\nEntramos al write bien\n");
-    // writeShm(shareMem, buffer, size);
-    strcpy(shareMem->address + shareMem->wIndex, buffer);
-    shareMem->wIndex += size;
+    buffer[size - 1] = 0;
+    // printf("\nEntramos al write bien\n");
+    writeShm(shareMem, buffer, size);
+    // strncpy(shareMem->address + shareMem->wIndex, buffer, size);
+    // shareMem->wIndex += size;
     // Escribo en la shareMemory
-    buffer[size - 1] = '\n'; // removemos \t
+     // removemos \t
     // Escribo en el archivo.
-    if (fwrite(buffer, sizeof(char), size, fResults) == 0)
+    if (fwrite(buffer, sizeof(char), size-1, fResults) == 0)
         HANDLE_ERROR("Error in file write");
-    printf("%s\n", shareMem->address + shareMem->rIndex);
-    shareMem->rIndex += size;
+    //     printf("%s\n", shareMem->address + shareMem->rIndex);
+    //     shareMem->rIndex += size;
 }
 static void endSlavery(t_slave slaves[], int dimSlaves)
 {
