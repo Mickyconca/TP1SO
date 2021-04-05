@@ -15,6 +15,7 @@
 #define MAX 4096   // PIPE_BUF
 #define TOKEN '\t' // Token elegido para separar las tareas
 
+
 int main(int argc, char const *argv[])
 {
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
@@ -32,9 +33,7 @@ int main(int argc, char const *argv[])
         int bytesRead = 0;
         if ((bytesRead = read(STDIN_FILENO, tasksRead, 20)) == -1)
             HANDLE_ERROR("Error in read from pipe in vision");
-        printf("bytesRead: %d\n", bytesRead);
         tasksRead[bytesRead] = 0;
-        // printf("%s.\n", tasksRead);
         tasksSize = strtol(tasksRead, NULL, 10);
     }
     else if (argc - 1 == 1) // Parametro
@@ -45,35 +44,26 @@ int main(int argc, char const *argv[])
     {
         HANDLE_ERROR("Error, wrong parameters in vision");
     }
-    printf("TasksSize: %d\n", tasksSize);
+    
     if (tasksSize == 0)
     {
         HANDLE_ERROR("Error, no tasks found to be processed");
     }
 
-    t_shm shareMem = joinShm(SHM_NAME, MAX);
+    t_shm shareMem = joinShm(SHM_NAME, tasksSize * MAX);
     t_sem sem = createSem(SEM_NAME);
-
-    int keepReading = 0;
-    // char buffer[MAX + 1];
-    char *toRead;
-    while (keepReading < tasksSize)
+    
+    int i = 0;
+    do
     {
         sem_wait(sem.access);
-        // toRead = shareMem.address + shareMem.rIndex;
-        // int size = strlen(toRead);
-        // printf("%s", toRead);
-        // shareMem.rIndex += size;
-        // if(*toRead == 0)
-        //     keepReading=tasksSize;
-        int oldIndex = shareMem.rIndex;
-        toRead = readShm(&shareMem);
-        // readShm(&shareMem, buffer, TOKEN);
-        if (oldIndex < shareMem.rIndex)
-            keepReading++;
-        printf("%i\n", keepReading);
-        printf("%s", toRead);
-    }
+        char *toRead = readShm(&shareMem);
+        int cantRead = strlen(toRead);
+        if (cantRead > 0)
+            i++;
+        printf("%s\n", toRead);
+    } while (i < tasksSize);
+   
     closeShm(&shareMem);
     closeSem(&sem);
     return 0;

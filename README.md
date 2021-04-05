@@ -71,7 +71,15 @@ Al finalizar la ejecución de **Master** se creará un archivo llamado **results
 
 ## Testeo
 
-Para el testeo con tanto **PVS-Studio**, **Cppcheck** como **Valgrind** se debe correr el siguiente comando:
+Para el testeo con tanto **PVS-Studio**, **Cppcheck** como **Valgrind** se debe primero instalar **PVS-Studio** de no tenerlo, de la siguiente manera en su contenedor de *docker*.
+
+```bash
+apt-get update
+apt-get install pvs-studio
+pvs-studio-analyzer credentials "PVS-Studio Free" "FREE-FREE-FREE-FREE"
+```
+
+Luego correr el siguiente comando:
 
 ```bash
  make test

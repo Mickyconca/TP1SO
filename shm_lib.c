@@ -10,10 +10,6 @@
 
 t_shm createShm(char *name, int size)
 {
-    // if (shm_unlink(name) == -1)
-    // {
-    //     HANDLE_ERROR("Error in unlink");
-    // }
     t_shm toReturn;
     toReturn.rIndex = 0;
     toReturn.wIndex = 0;
@@ -54,61 +50,18 @@ t_shm joinShm(char *name, int size)
     return toReturn;
 }
 
-// void readShm(t_shm *shareMem, char *buffer, char token)
-// {
-//     // printf("%s\n", shareMem->address + shareMem->rIndex);
-//     //     shareMem->rIndex += size;
 
-//     char *nextTask;
-//     if ((nextTask = strchr(shareMem->address + shareMem->rIndex, token)) == NULL)
-//     {
-//         HANDLE_ERROR("Error in readshm in vision");
-//     }
-//     strcpy(nextTask, "\n");
-//     strcpy(buffer, shareMem->address + shareMem->rIndex);
-//     shareMem->rIndex += (nextTask - shareMem->address);
-
-//     // char *readFrom = (char *)shareMem->address + shareMem->rIndex;
-//     // int flag = 0;
-//     // int i;
-//     // for (i = 0; i < shareMem->size && !flag; i++)
-//     // {
-//     //     if (readFrom[i] == token)
-//     //     {
-//     //         flag = 1;
-//     //         buffer[i] = 0;
-//     //     }
-//     //     else
-//     //     {
-//     //         buffer[i] = readFrom[i];
-//     //     }
-//     // }
-//     // shareMem->rIndex += i;
-// }
 char *readShm(t_shm *shareMem)
 {
     char *toReturn = shareMem->address + shareMem->rIndex;
-    // char *nextTask;
-    // if ((nextTask = strchr(shareMem->address + shareMem->rIndex, 0)) == NULL)
-    // {
-    //     HANDLE_ERROR("Error in readshm in vision");
-    // }
     int size = strlen(toReturn);
-    //shareMem->rIndex += (nextTask + 1 - shareMem->address);
-    shareMem->rIndex += (size + 1);
+    shareMem->rIndex += (size + 3); // OFFSET
     return toReturn;
 }
-
-void writeShm(t_shm *shareMem, char *fromWrite, int size)
+void writeShm(t_shm *shareMem, char *fromWrite, int size, int offSet)
 {
-    int writeIndex = shareMem->wIndex;
-    char *toWrite = (char *)shareMem->address;
-    for (int i = 0; i < size; i++)
-    {
-        toWrite[writeIndex++] = fromWrite[i];
-    }
-    toWrite[writeIndex] = 0;
-    shareMem->wIndex = writeIndex;
+    memcpy(shareMem->address + shareMem->wIndex, fromWrite, size + 1);
+    shareMem->wIndex += size + offSet;
 }
 
 void closeShm(t_shm *shareMem)

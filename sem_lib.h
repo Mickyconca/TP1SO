@@ -29,3 +29,4 @@ typedef struct
 
 t_sem createSem(char *name);
 void closeSem(t_sem *sem);
+void eraseSem(t_sem *sem);

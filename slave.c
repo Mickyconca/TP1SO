@@ -19,8 +19,11 @@ static void runTask(char *task);
 
 int main(int argc, char const *argv[])
 {
-    // setvbuf(stdout, NULL, _IONBF, 0);
     if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+    {
+        HANDLE_ERROR("Error in Setvbuf");
+    }
+    if (setvbuf(stdin, NULL, _IONBF, 0) != 0)
     {
         HANDLE_ERROR("Error in Setvbuf");
     }

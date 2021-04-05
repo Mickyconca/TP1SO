@@ -1,5 +1,6 @@
 CC= gcc
-GCCFLAGS= -std=c99 -Wall -g -fsanitize=address -D_XOPEN_SOURCE=700
+GCCFLAGS= -std=c99 -Wall -g -D_XOPEN_SOURCE=700
+# -fsanitize=address 
 GCCLIBS= -lrt -lpthread
 EXEC = Master Slave Vision
 
@@ -60,6 +61,6 @@ test: clean
 	pvs-studio-analyzer trace -- make
 	pvs-studio-analyzer analyze
 	plog-converter -a '64:1,2,3;GA:1,2,3;OP:1,2,3' -t tasklist -o report.tasks PVS-Studio.log  > /dev/null
-	valgrind --leak-check=full -v ./Master files/*  2> Master.valgrind; valgrind --leak-check=full -v ./Vision  2> Vision.valgrind; cppcheck --quiet --enable=all --force --inconclusive . 2> cppoutput.txt
-
+	valgrind --leak-check=full -v ./Master files/*  2> Master.valgrind; valgrind --leak-check=full -v ./Master files/* > ./Vision  2> Vision.valgrind; cppcheck --quiet --enable=all --force --inconclusive . 2> cppoutput.txt
+# valgrind --leak-check=full -v ./Master files/* > ./Vision 2> Master.valgrind
 .PHONY: all clean test cleanTest

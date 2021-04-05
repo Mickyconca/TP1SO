@@ -30,8 +30,7 @@ typedef struct
 
 t_shm createShm(char *name, int size); // shm_open -> ftruncate -> mmap
 t_shm joinShm(char *name, int size);
-//void readShm(t_shm *shareMem, char *buffer, char token);
-char * readShm(t_shm *shareMem);
-void writeShm(t_shm *shareMem, char *fromWrite, int size);
+char *readShm(t_shm *shareMem);
+void writeShm(t_shm *shareMem, char *fromWrite, int size, int offSet);
 void closeShm(t_shm *shareMem);
 void eraseShm(t_shm *shareMem);
