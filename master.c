@@ -20,7 +20,7 @@
 #define WRITE 1
 #define READ 0
 
-#define PATH_SLAVE "./slave"
+#define PATH_SLAVE "./Slave"
 #define PATH_RESULTS "./results.txt"
 #define NSLAVES 5
 #define MIN_TASKS 2

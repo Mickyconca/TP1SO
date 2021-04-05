@@ -95,7 +95,7 @@ char *readShm(t_shm *shareMem)
     // }
     int size = strlen(toReturn);
     //shareMem->rIndex += (nextTask + 1 - shareMem->address);
-    shareMem->rIndex += (size + 1);
+    shareMem->rIndex += (size+1);
     return toReturn;
 }
 
